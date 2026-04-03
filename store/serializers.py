@@ -36,7 +36,6 @@ class CartItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     class Meta:
         model = Order
         fields = ('id','total_price','created_at',)
