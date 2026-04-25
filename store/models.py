@@ -3,10 +3,29 @@ from django.contrib.auth.models import AbstractUser
 from  phonenumber_field.modelfields import PhoneNumberField
 from decimal import Decimal
 
+
+class Expense(models.Model):
+    """Чыгыш / расходы"""
+    EXPENSE_TYPES = (
+        ('salary', 'Жалакы'),
+        ('rent', 'Ижара'),
+        ('purchase', 'Товар закупка'),
+        ('other', 'Башка'),
+    )
+    name = models.CharField(max_length=200)
+    expense_type = models.CharField(max_length=20, choices=EXPENSE_TYPES)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    date = models.DateField()
+    note = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} — {self.amount}"
+
 class UserProfile(AbstractUser):
     phone_number = PhoneNumberField(unique=True,null=True,blank=True)
     ROLE_CHOICES = (
-        ('adminstrator', 'adminstrator'),
+        ('administrator', 'administrator'),
         ('owner', 'owner'),
         ('seller', 'seller'),
     )
