@@ -83,11 +83,20 @@ class OrderDetailSerializer(serializers.ModelSerializer):
         fields = ('id','total_price')
 
 
-
 class OrderItemSerializer(serializers.ModelSerializer):
-     class Meta:
-         model = OrderItem
-         fields = ('id','product','quantity','price','created_at')
+    class Meta:
+        model = OrderItem
+        fields = ('id', 'product', 'quantity', 'price')
+
+
+class OrderItemDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = ('id', 'product', 'quantity', 'price')
+
+
+
+
 
 
 class ExpenseSerializer(serializers.ModelSerializer):

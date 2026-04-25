@@ -32,8 +32,7 @@ urlpatterns = [
 
 
     path('orders_item/', OrderAPIView.as_view(), name='order-create'),
-
-
+    path('orders_item/<int:pk>/', OrderItemDetailAPIView.as_view(), name='order_item-detail'),
 
     # Чыгыш CRUD
     path('expenses/', ExpenseListCreateAPIView.as_view(), name='expense-list'),
