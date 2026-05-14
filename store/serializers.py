@@ -1,86 +1,55 @@
 from .models import *
 from rest_framework import serializers
 
-class ClienterSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields =('id', 'username', 'email', 'first_name', 'last_name','phone_number','user_role')
-
-class ClientDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserProfile
-        fields =('id', 'username', 'email', 'first_name', 'last_name','phone_number','user_role')
-
-class SellerSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserProfile
-        fields =('id', 'username', 'email', 'first_name', 'last_name','phone_number','user_role')
-
-class SellerDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserProfile
-        fields =('id', 'username', 'email', 'first_name', 'last_name','phone_number','user_role')
-
-class SellerDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserProfile
-        fields =('id', 'username', 'email', 'first_name', 'last_name','phone_number','user_role')
-
-
-class OwnerSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserProfile
-        fields =('id', 'username', 'email', 'first_name', 'last_name','phone_number','user_role')
-
-
-class AdminstratorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserProfile
-        fields =('id', 'username', 'email', 'first_name', 'last_name','phone_number','user_role')
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'phone_number', 'user_role')
 
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ('id','sku','name_product','cost_price','opt','retail','descriptions')
+        fields = ('id', 'sku', 'name_product', 'cost_price', 'opt', 'retail', 'descriptions')
+
 
 class ProductDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ('id','sku','name_product','cost_price','opt','retail','descriptions')
+        fields = ('id', 'sku', 'name_product', 'cost_price', 'opt', 'retail', 'descriptions')
+
+
+class CartItemListSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)  # ИСПРАВЛЕНО: вместо product_id — вложенный объект
+    product_id = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all(), source='product', write_only=True
+    )
+
+    class Meta:
+        model = CartItem
+        fields = ('id', 'cart', 'quantity', 'product', 'product_id', 'total_price')
+
+
+class CartItemDetailSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+
+    class Meta:
+        model = CartItem
+        fields = ('id', 'cart', 'quantity', 'product', 'total_price')
+
 
 class CartListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
-        fields = ('id','user','created_at')
+        fields = ('id', 'user', 'created_at', 'total_price', 'total_positions', 'total_items')
+
 
 class CartDetailSerializer(serializers.ModelSerializer):
+    items = CartItemListSerializer(many=True, read_only=True)
+
     class Meta:
         model = Cart
-        fields = ('id','user','created_at')
-
-
-class CartItemListSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CartItem
-        fields = ('id','cart','quantity','product_id')
-
-class CartItemDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CartItem
-        fields = ('id','cart','quantity','product_id')
-
-
-
-class OrderSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Order
-        fields = ('id','total_price')
-
-class OrderDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Order
-        fields = ('id','total_price')
+        fields = ('id', 'user', 'created_at', 'total_price', 'total_positions', 'total_items', 'items')
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -90,13 +59,26 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderItemDetailSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+
     class Meta:
         model = OrderItem
         fields = ('id', 'product', 'quantity', 'price')
 
 
+class OrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ('id', 'user', 'total_price', 'created_at')  # ИСПРАВЛЕНО: добавлены user и created_at
 
 
+class OrderDetailSerializer(serializers.ModelSerializer):
+    items = OrderItemDetailSerializer(many=True, read_only=True)
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ('id', 'user', 'total_price', 'created_at', 'items')
 
 
 class ExpenseSerializer(serializers.ModelSerializer):
@@ -106,7 +88,6 @@ class ExpenseSerializer(serializers.ModelSerializer):
 
 
 class DailySalesSerializer(serializers.Serializer):
-    """Күнүмдүк сатуу"""
     date = serializers.DateField()
     revenue = serializers.DecimalField(max_digits=12, decimal_places=2)
     cost = serializers.DecimalField(max_digits=12, decimal_places=2)
@@ -115,7 +96,6 @@ class DailySalesSerializer(serializers.Serializer):
 
 
 class CategoryProfitSerializer(serializers.Serializer):
-    """Категория боюнча прибыль (Product SKU префикси же аталышы)"""
     category = serializers.CharField()
     revenue = serializers.DecimalField(max_digits=12, decimal_places=2)
     cost = serializers.DecimalField(max_digits=12, decimal_places=2)
@@ -124,7 +104,6 @@ class CategoryProfitSerializer(serializers.Serializer):
 
 
 class AnalyticsSummarySerializer(serializers.Serializer):
-    """Жалпы жыйынтык"""
     period_start = serializers.DateField()
     period_end = serializers.DateField()
     total_revenue = serializers.DecimalField(max_digits=12, decimal_places=2)
@@ -139,5 +118,3 @@ class AnalyticsSummarySerializer(serializers.Serializer):
     category_profit = CategoryProfitSerializer(many=True)
     top_products = serializers.ListField()
     expense_breakdown = serializers.ListField()
-
-

@@ -1,27 +1,32 @@
-from django.shortcuts import render
-from rest_framework import viewsets,generics, permissions, status, response
-from rest_framework import generics, status
+from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Sum, Count,F,DecimalField,ExpressionWrapper
+from django.db.models import Sum, Count, F, DecimalField, ExpressionWrapper
 from django.db.models.functions import TruncDate
-
-from django.utils import timezone
 from datetime import date, timedelta
 from .serializers import *
 
 
 class SellerAPIView(generics.ListCreateAPIView):
     queryset = UserProfile.objects.all()
-    serializer_class = SellerSerializer
+    serializer_class = UserSerializer
 
     def get_queryset(self):
         return UserProfile.objects.filter(id=self.request.user.id)
 
+
 class SellerDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = UserProfile.objects.all()
-    serializer_class = SellerDetailSerializer
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        return UserProfile.objects.filter(id=self.request.user.id)
+
+
+class ClientAPIView(generics.ListCreateAPIView):
+    queryset = UserProfile.objects.all()
+    serializer_class = UserSerializer
 
     def get_queryset(self):
         return UserProfile.objects.filter(id=self.request.user.id)
@@ -29,56 +34,52 @@ class SellerDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
 class ClientDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = UserProfile.objects.all()
-    serializer_class = SellerDetailSerializer
+    serializer_class = UserSerializer
 
     def get_queryset(self):
         return UserProfile.objects.filter(id=self.request.user.id)
-
-class ClientAPIView(generics.ListCreateAPIView):
-    queryset = UserProfile.objects.all()
-    serializer_class = SellerSerializer
-
-    def get_queryset(self):
-        return UserProfile.objects.filter(id=self.request.user.id)
-
-
 
 
 class OwnerAPIView(generics.ListAPIView):
     queryset = UserProfile.objects.all()
-    serializer_class = OwnerSerializer
+    serializer_class = UserSerializer
 
     def get_queryset(self):
         return UserProfile.objects.filter(id=self.request.user.id)
+
 
 class AdministratorAPIView(generics.ListAPIView):
     queryset = UserProfile.objects.all()
-    serializer_class = AdminstratorSerializer
+    serializer_class = UserSerializer
 
     def get_queryset(self):
         return UserProfile.objects.filter(id=self.request.user.id)
-
 
 
 class ProductAPIView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 
+
 class ProductDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductDetailSerializer
+
 
 class CartAPIView(generics.ListCreateAPIView):
     queryset = Cart.objects.all()
     serializer_class = CartListSerializer
 
+
 class CartDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Cart.objects.all()
     serializer_class = CartDetailSerializer
 
+
 class CartItemAPIView(generics.ListCreateAPIView):
     queryset = CartItem.objects.all()
     serializer_class = CartItemListSerializer
+
 
 class CartItemDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CartItem.objects.all()
@@ -89,9 +90,11 @@ class OrderAPIView(generics.ListCreateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
 
+
 class OrderDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderDetailSerializer
+
 
 class OrderItemAPIView(generics.ListCreateAPIView):
     queryset = OrderItem.objects.all()
@@ -100,14 +103,10 @@ class OrderItemAPIView(generics.ListCreateAPIView):
 
 class OrderItemDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = OrderItem.objects.all()
-    serializer_class = OrderItemSerializer
+    serializer_class = OrderItemDetailSerializer
 
 
 class ExpenseListCreateAPIView(generics.ListCreateAPIView):
-    """
-    GET  /expenses/        — чыгыштар тизмеси
-    POST /expenses/        — жаңы чыгыш кошуу
-    """
     queryset = Expense.objects.all().order_by('-date')
     serializer_class = ExpenseSerializer
     permission_classes = [IsAuthenticated]
@@ -121,32 +120,12 @@ class ExpenseListCreateAPIView(generics.ListCreateAPIView):
 
 
 class ExpenseRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    GET    /expenses/<id>/  — бир чыгыш
-    PUT    /expenses/<id>/  — өзгөртүү
-    DELETE /expenses/<id>/  — өчүрүү
-    """
     queryset = Expense.objects.all()
     serializer_class = ExpenseSerializer
     permission_classes = [IsAuthenticated]
 
 
 class AnalyticsSummaryAPIView(APIView):
-    """
-    GET /analytics/summary/?period=week|month|all
-
-    Жооп:
-    {
-        period_start, period_end,
-        total_revenue, total_cost_goods, gross_profit,
-        total_expenses, net_profit, margin_percent,
-        orders_count, items_sold,
-        daily_sales: [ {date, revenue, cost, profit, orders_count}, ... ],
-        category_profit: [ {category, revenue, cost, profit, qty_sold}, ... ],
-        top_products: [ {name, qty_sold, revenue, profit}, ... ],
-        expense_breakdown: [ {type, amount}, ... ]
-    }
-    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -160,7 +139,6 @@ class AnalyticsSummaryAPIView(APIView):
         else:
             start = date(2000, 1, 1)
 
-        # ── Сатуулар (OrderItem) ─────────────────────────────
         order_items = OrderItem.objects.filter(
             order__created_at__date__gte=start
         ).select_related('product', 'order')
@@ -177,7 +155,6 @@ class AnalyticsSummaryAPIView(APIView):
 
         gross_profit = total_revenue - total_cost_goods
 
-        # ── Чыгыштар ────────────────────────────────────────
         total_expenses = Expense.objects.filter(
             date__gte=start
         ).aggregate(s=Sum('amount'))['s'] or Decimal('0.00')
@@ -188,7 +165,6 @@ class AnalyticsSummaryAPIView(APIView):
         orders_count = Order.objects.filter(created_at__date__gte=start).count()
         items_sold = order_items.aggregate(s=Sum('quantity'))['s'] or 0
 
-        # ── Күнүмдүк сатуу ──────────────────────────────────
         daily_raw = (
             order_items
             .annotate(day=TruncDate('order__created_at'))
@@ -213,7 +189,6 @@ class AnalyticsSummaryAPIView(APIView):
             for r in daily_raw
         ]
 
-        # ── Категория боюнча прибыль (SKU 3 символ = категория) ──
         cat_raw = (
             order_items
             .values('product__sku')
@@ -236,7 +211,6 @@ class AnalyticsSummaryAPIView(APIView):
             for r in cat_raw
         ]
 
-        # ── Топ 5 товар ──────────────────────────────────────
         top_raw = (
             order_items
             .values('product__name_product')
@@ -259,7 +233,6 @@ class AnalyticsSummaryAPIView(APIView):
             for r in top_raw
         ]
 
-        # ── Чыгыш түрлөрү боюнча ────────────────────────────
         exp_break = (
             Expense.objects.filter(date__gte=start)
             .values('expense_type')
@@ -290,8 +263,3 @@ class AnalyticsSummaryAPIView(APIView):
 
         serializer = AnalyticsSummarySerializer(data)
         return Response(serializer.data)
-
-
-
-
-
