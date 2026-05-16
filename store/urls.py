@@ -7,6 +7,10 @@ router = routers.SimpleRouter()
 urlpatterns = [
     path('', include(router.urls)),
 
+    path('register/', RegisterView.as_view(), name='register'),
+    path('login/', CustomLoginView.as_view(), name='login'),
+    path('logout/', LogoutView.as_view(), name='logout'),
+
     path('clients/', ClientAPIView.as_view(), name='clients'),
     path('clients/<int:pk>/', ClientDetailAPIView.as_view(), name='clients-detail'),
 
